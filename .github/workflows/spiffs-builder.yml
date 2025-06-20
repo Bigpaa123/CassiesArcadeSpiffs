@@ -11,19 +11,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Download mkspiffs binary
+      - name: Download mkspiffs binary (Working fork)
         run: |
           mkdir tools
-          wget https://github.com/espressif/arduino-esp32/releases/download/2.0.14/mkspiffs-2.0.14-linux-amd64.tar.gz -O tools/mkspiffs.tar.gz
-          tar -xzf tools/mkspiffs.tar.gz -C tools
+          wget https://github.com/earlephilhower/mkspiffs/releases/download/3.1.0/mkspiffs-linux64 -O tools/mkspiffs
           chmod +x tools/mkspiffs
-          mv tools/mkspiffs tools/mkspiffs-bin
 
       - name: Build SPIFFS image
         run: |
           mkdir -p data
           cp *.html *.css data/
-          tools/mkspiffs-bin -c data -b 4096 -p 256 -s 0x100000 spiffs.bin
+          tools/mkspiffs -c data -b 4096 -p 256 -s 0x100000 spiffs.bin
 
       - name: Upload SPIFFS binary
         uses: actions/upload-artifact@v4

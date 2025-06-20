@@ -5,6 +5,11 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Why are you running this build?'
+        required: false
+        default: 'Manual run'
 
 jobs:
   build-spiffs:
@@ -14,27 +19,25 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
+    - name: Set up Java (for SPIFFS tool)
+      uses: actions/setup-java@v3
       with:
-        python-version: '3.x'
+        java-version: '11'
 
-    - name: Install ESP32FS
+    - name: Download ESP32FS Tool
       run: |
-        pip install esptool
-        git clone https://github.com/me-no-dev/arduino-esp32fs-plugin.git esp32fs
-        chmod +x ./esp32fs/tool/esp32fs.jar
+        mkdir esp32fs
+        wget https://github.com/me-no-dev/arduino-esp32fs-plugin/raw/master/tool/esp32fs.jar -O esp32fs/esp32fs.jar
 
     - name: Prepare SPIFFS image
       run: |
         mkdir spiffs-image
         cp *.html *.css spiffs-image/
-        wget https://raw.githubusercontent.com/me-no-dev/arduino-esp32fs-plugin/master/tool/esp32fs.jar -O esp32fs.jar
         mkdir build
-        java -jar esp32fs.jar --chip esp32 -c spiffs-image -p COM1 -b 921600 -s 0x100000 -f build/spiffs.bin
+        java -jar esp32fs/esp32fs.jar --chip esp32 -c spiffs-image -s 0x100000 -b build/spiffs.bin
 
     - name: Upload SPIFFS binary
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: spiffs-binary
         path: build/spiffs.bin

@@ -1,7 +1,7 @@
 name: build-spiffs
 
 on:
-  workflow_dispatch:  # allows manual run from GitHub UI
+  workflow_dispatch:
 
 jobs:
   build-spiffs:
@@ -11,25 +11,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Java (for SPIFFS tool)
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: '11'
-
-      - name: Download ESP32FS Tool
+      - name: Download mkspiffs binary
         run: |
-          mkdir esp32fs
-          wget https://github.com/igrr/mkspiffs/archive/refs/heads/master.zip -O esp32fs/mkspiffs.zip
-          unzip esp32fs/mkspiffs.zip -d esp32fs
-          cd esp32fs/mkspiffs-master
-          make clean && make
+          mkdir tools
+          wget https://github.com/espressif/arduino-esp32/releases/download/2.0.11/mkspiffs-2.0.11-linux64.tar.gz -O tools/mkspiffs.tar.gz
+          tar -xzf tools/mkspiffs.tar.gz -C tools
+          chmod +x tools/mkspiffs
 
       - name: Prepare SPIFFS image
         run: |
           mkdir -p data
           cp *.html *.css data/
-          ./esp32fs/mkspiffs-master/mkspiffs -c data -b 4096 -p 256 -s 0x100000 spiffs.bin
+          tools/mkspiffs -c data -b 4096 -p 256 -s 0x100000 spiffs.bin
 
       - name: Upload SPIFFS binary
         uses: actions/upload-artifact@v4

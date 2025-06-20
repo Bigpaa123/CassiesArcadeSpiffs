@@ -12,21 +12,27 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v3
 
     - name: Create data folder and move files
       run: |
         mkdir -p data
         mv *.html *.css *.js data/ 2>/dev/null || true
 
-    - name: Download mkspiffs binary
+    - name: Install build dependencies
       run: |
-        mkdir tools
-        cd tools
-        wget https://github.com/igrr/mkspiffs/releases/download/0.2.3/mkspiffs-0.2.3-linux64.tar.gz
-        tar -xzf mkspiffs-0.2.3-linux64.tar.gz
-        chmod +x mkspiffs
-        sudo mv mkspiffs /usr/local/bin/
+        sudo apt update
+        sudo apt install -y cmake g++ git
+
+    - name: Clone and build mkspiffs
+      run: |
+        git clone https://github.com/igrr/mkspiffs.git
+        cd mkspiffs
+        mkdir build
+        cd build
+        cmake ..
+        make
+        sudo cp mkspiffs /usr/local/bin/
 
     - name: Build SPIFFS image
       run: |

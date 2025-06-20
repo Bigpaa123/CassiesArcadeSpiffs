@@ -1,32 +1,37 @@
 name: build-spiffs
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:  # manual trigger from GitHub Actions tab
 
 jobs:
   build-spiffs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: ✅ Checkout code
         uses: actions/checkout@v3
 
-      - name: Download mkspiffs binary
+      - name: 🛠️ Download mkspiffs binary
         run: |
           mkdir tools
-          wget https://github.com/espressif/arduino-esp32/releases/download/2.0.11/mkspiffs-2.0.11-linux-amd64.tar.gz -O tools/mkspiffs.tar.gz
+          wget https://github.com/espressif/mkspiffs/releases/download/2.230.0/mkspiffs-2.230.0-linux-amd64.tar.gz -O tools/mkspiffs.tar.gz
           tar -xzf tools/mkspiffs.tar.gz -C tools
-          chmod +x tools/mkspiffs-2.0.11-linux-amd64
-          mv tools/mkspiffs-2.0.11-linux-amd64 tools/mkspiffs
+          chmod +x tools/mkspiffs-2.230.0-linux-amd64
+          mv tools/mkspiffs-2.230.0-linux-amd64 tools/mkspiffs
 
-      - name: Prepare SPIFFS image
+      - name: 📦 Prepare SPIFFS image
         run: |
           mkdir -p data
           cp *.html *.css data/
-          tools/mkspiffs -c data -b 4096 -p 256 -s 0x100000 spiffs.bin
+          tools/mkspiffs \
+            -c data \
+            -b 4096 \
+            -p 256 \
+            -s 0x100000 \
+            spiffs.bin
 
-      - name: Upload SPIFFS binary
+      - name: 📤 Upload SPIFFS binary
         uses: actions/upload-artifact@v4
         with:
-          name: CassiesArcadeSpiffs
+          name: CassiesArcadeSpiffs-image
           path: spiffs.bin

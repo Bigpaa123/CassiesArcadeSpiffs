@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>🚦 Traffic Light Tap</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      background: #111;
+      color: #fff;
+      font-family: sans-serif;
+      text-align: center;
+      margin: 0;
+      overflow: hidden;
+    }
+    #ui {
+      padding: 10px;
+      font-size: 1.2em;
+    }
+    #lights {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 20px;
+      padding: 10px;
+    }
+    .light {
+      width: 60px;
+      height: 160px;
+      background: #333;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-evenly;
+      align-items: center;
+      padding: 8px 0;
+      touch-action: none;
+    }
+    .bulb {
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      background: #222;
+    }
+    .active {
+      box-shadow: 0 0 15px 4px rgba(0,255,0,0.6);
+    }
+  </style>
+</head>
+<body>
+
+<div id="ui">
+  ❤️ Lives: <span id="lives">3</span> |
+  🏆 Score: <span id="score">0</span> |
+  🧠 High: <span id="high">0</span>
+</div>
+
+<div id="lights"></div>
+
+<script>
+  const lightsContainer = document.getElementById('lights');
+  const livesSpan = document.getElementById('lives');
+  const scoreSpan = document.getElementById('score');
+  const highSpan = document.getElementById('high');
+
+  let lives = 3;
+  let score = 0;
+  let high = parseInt(localStorage.getItem('trafficHigh')) || 0;
+  let lights = [];
+  let active = null;
+  let interval = 2000;
+
+  highSpan.innerText = high;
+
+  function createLights(count = 6) {
+    lightsContainer.innerHTML = '';
+    lights = [];
+    for (let i = 0; i < count; i++) {
+      const light = document.createElement('div');
+      light.className = 'light';
+
+      const red = document.createElement('div');
+      red.className = 'bulb red';
+      red.style.background = '#b00';
+
+      const yellow = document.createElement('div');
+      yellow.className = 'bulb yellow';
+      yellow.style.background = '#aa0';
+
+      const green = document.createElement('div');
+      green.className = 'bulb green';
+      green.style.background = '#040';
+      green.dataset.index = i;
+
+      light.appendChild(red);
+      light.appendChild(yellow);
+      light.appendChild(green);
+
+      green.addEventListener('touchstart', () => handleTap(i));
+
+      lights.push({ light, red, yellow, green });
+      lightsContainer.appendChild(light);
+    }
+  }
+
+  function handleTap(index) {
+    if (index === active) {
+      score++;
+      updateUI();
+      clearActive();
+      nextRound();
+    } else {
+      lives--;
+      updateUI();
+      if (lives <= 0) endGame();
+    }
+  }
+
+  function clearActive() {
+    if (active !== null && lights[active]) {
+      lights[active].green.classList.remove('active');
+      lights[active].green.style.background = '#040';
+    }
+    active = null;
+  }
+
+  function nextRound() {
+    if (lives <= 0) return;
+    interval = Math.max(600, interval - 50);
+    setTimeout(() => {
+      clearActive();
+      const index = Math.floor(Math.random() * lights.length);
+      lights[index].green.classList.add('active');
+      lights[index].green.style.background = 'limegreen';
+      active = index;
+
+      // Timeout to miss tap
+      setTimeout(() => {
+        if (active === index) {
+          lives--;
+          updateUI();
+          clearActive();
+          if (lives <= 0) endGame();
+          else nextRound();
+        }
+      }, interval);
+    }, 300);
+  }
+
+  function updateUI() {
+    livesSpan.innerText = lives;
+    scoreSpan.innerText = score;
+    if (score > high) {
+      high = score;
+      localStorage.setItem('trafficHigh', high);
+      highSpan.innerText = high;
+    }
+  }
+
+  function endGame() {
+    clearActive();
+    lightsContainer.innerHTML = `<h2>Game Over! Score: ${score}</h2>`;
+    setTimeout(() => location.reload(), 3000);
+  }
+
+  function startGame() {
+    createLights();
+    updateUI();
+    nextRound();
+  }
+
+  startGame();
+</script>
+
+</body>
+</html>

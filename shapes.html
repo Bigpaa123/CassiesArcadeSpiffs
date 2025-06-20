@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Shape Sorter</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #f4f4f4;
+      font-family: Arial, sans-serif;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.5rem;
+      margin: 10px 0;
+    }
+
+    .game-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100%;
+      justify-content: space-between;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+
+    .row {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      flex-wrap: wrap;
+      position: relative;
+      width: 100%;
+      height: 100px;
+    }
+
+    .target {
+      width: 70px;
+      height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .circle.target { border: 3px dashed red; border-radius: 50%; }
+    .square.target { border: 3px dashed blue; }
+
+    .target svg {
+      pointer-events: none;
+    }
+
+    .shape {
+      width: 70px;
+      height: 70px;
+      position: fixed;
+      touch-action: none;
+      z-index: 10;
+    }
+
+    .circle.shape { background-color: red; border-radius: 50%; }
+    .square.shape { background-color: blue; }
+    .triangle-shape {
+      width: 0;
+      height: 0;
+      border-left: 35px solid transparent;
+      border-right: 35px solid transparent;
+      border-bottom: 70px solid green;
+    }
+
+    svg {
+      width: 70px;
+      height: 70px;
+    }
+
+    svg polygon, svg ellipse {
+      stroke-width: 4;
+    }
+  </style>
+</head>
+<body>
+  <h1>Shape Sorter</h1>
+  <div class="game-area">
+    <div class="row" id="targets"></div>
+  </div>
+  <div id="shapes"></div>
+
+  <script>
+    const shapePool = [
+      { type: 'circle', create: () => {
+        const el = document.createElement('div');
+        el.className = 'shape circle';
+        el.dataset.shape = 'circle';
+        return el;
+      }},
+      { type: 'square', create: () => {
+        const el = document.createElement('div');
+        el.className = 'shape square';
+        el.dataset.shape = 'square';
+        return el;
+      }},
+      { type: 'triangle', create: () => {
+        const el = document.createElement('div');
+        el.className = 'shape triangle-shape shape';
+        el.dataset.shape = 'triangle';
+        return el;
+      }},
+      { type: 'star', create: () => {
+        const el = document.createElement('div');
+        el.className = 'shape';
+        el.dataset.shape = 'star';
+        el.innerHTML = `<svg><polygon stroke="orange" fill="orange" points="35,5 42,25 65,25 46,40 52,60 35,48 18,60 24,40 5,25 28,25"/></svg>`;
+        return el;
+      }},
+      { type: 'hexagon', create: () => {
+        const el = document.createElement('div');
+        el.className = 'shape';
+        el.dataset.shape = 'hexagon';
+        el.innerHTML = `<svg><polygon stroke="purple" fill="purple" points="35,5 60,20 60,50 35,65 10,50 10,20"/></svg>`;
+        return el;
+      }},
+      { type: 'oval', create: () => {
+        const el = document.createElement('div');
+        el.className = 'shape';
+        el.dataset.shape = 'oval';
+        el.innerHTML = `<svg><ellipse cx="35" cy="35" rx="30" ry="20" stroke="brown" fill="brown"/></svg>`;
+        return el;
+      }},
+      { type: 'pentagon', create: () => {
+        const el = document.createElement('div');
+        el.className = 'shape';
+        el.dataset.shape = 'pentagon';
+        el.innerHTML = `<svg><polygon stroke="teal" fill="teal" points="35,5 60,25 50,60 20,60 10,25"/></svg>`;
+        return el;
+      }},
+    ];
+
+    const totalShapes = 3;
+    const gameArea = document.querySelector('.game-area');
+    const targetsRow = document.getElementById('targets');
+    const shapesLayer = document.getElementById('shapes');
+
+    let matchedCount = 0;
+    let selected = null;
+    let offsetX = 0, offsetY = 0;
+
+    const selectedShapes = shapePool.sort(() => 0.5 - Math.random()).slice(0, totalShapes);
+
+    selectedShapes.forEach(({ type }) => {
+      const target = document.createElement('div');
+      target.className = `target ${type}`;
+      target.dataset.shape = type;
+
+      if (type === 'triangle') {
+        target.innerHTML = `<svg><polygon stroke="green" fill="none" points="35,5 5,65 65,65"/></svg>`;
+      } else if (type === 'star') {
+        target.innerHTML = `<svg><polygon stroke="orange" fill="none" points="35,5 42,25 65,25 46,40 52,60 35,48 18,60 24,40 5,25 28,25"/></svg>`;
+      } else if (type === 'hexagon') {
+        target.innerHTML = `<svg><polygon stroke="purple" fill="none" points="35,5 60,20 60,50 35,65 10,50 10,20"/></svg>`;
+      } else if (type === 'oval') {
+        target.innerHTML = `<svg><ellipse cx="35" cy="35" rx="30" ry="20" stroke="brown" fill="none"/></svg>`;
+      } else if (type === 'pentagon') {
+        target.innerHTML = `<svg><polygon stroke="teal" fill="none" points="35,5 60,25 50,60 20,60 10,25"/></svg>`;
+      }
+
+      targetsRow.appendChild(target);
+      const shapeEl = shapePool.find(s => s.type === type).create();
+      shapesLayer.appendChild(shapeEl);
+    });
+
+    function randomizePositions() {
+      const shapes = document.querySelectorAll('.shape');
+      shapes.forEach(shape => {
+        const x = Math.floor(Math.random() * (window.innerWidth - 80));
+        const y = Math.floor(Math.random() * (window.innerHeight - 250)) + 120;
+        shape.style.left = `${x}px`;
+        shape.style.top = `${y}px`;
+      });
+    }
+
+    randomizePositions();
+
+    document.querySelectorAll('.shape').forEach(shape => {
+      shape.addEventListener('touchstart', e => {
+        const touch = e.touches[0];
+        const rect = shape.getBoundingClientRect();
+        offsetX = touch.clientX - rect.left;
+        offsetY = touch.clientY - rect.top;
+        selected = shape;
+        shape.style.zIndex = "1000";
+      });
+
+      shape.addEventListener('touchmove', e => {
+        if (!selected) return;
+        const touch = e.touches[0];
+        selected.style.left = `${touch.clientX - offsetX}px`;
+        selected.style.top = `${touch.clientY - offsetY}px`;
+      });
+
+      shape.addEventListener('touchend', () => {
+        if (!selected) return;
+        const shapeType = selected.dataset.shape;
+        const shapeRect = selected.getBoundingClientRect();
+
+        let matched = false;
+
+        document.querySelectorAll('.target').forEach(target => {
+          const targetType = target.dataset.shape;
+          const targetRect = target.getBoundingClientRect();
+
+          const overlap = !(
+            shapeRect.right < targetRect.left ||
+            shapeRect.left > targetRect.right ||
+            shapeRect.bottom < targetRect.top ||
+            shapeRect.top > targetRect.bottom
+          );
+
+          if (overlap && shapeType === targetType && !target.querySelector('.shape')) {
+            matched = true;
+            selected.style.left = '0px';
+            selected.style.top = '0px';
+            selected.style.position = 'static';
+            selected.style.pointerEvents = 'none';
+            target.appendChild(selected);
+            matchedCount++;
+
+            if (matchedCount === totalShapes) {
+              setTimeout(() => location.reload(), 1200);
+            }
+          }
+        });
+
+        if (!matched) {
+          const x = Math.floor(Math.random() * (window.innerWidth - 80));
+          const y = Math.floor(Math.random() * (window.innerHeight - 250)) + 120;
+          selected.style.left = `${x}px`;
+          selected.style.top = `${y}px`;
+        }
+
+        selected.style.zIndex = "1";
+        selected = null;
+      });
+    });
+  </script>
+</body>
+</html>

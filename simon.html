@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Simon Says - Demi's Arcade</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: #fff;
+      font-family: sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+
+    h1 {
+      padding: 20px;
+      color: #00e5ff;
+    }
+
+    #game {
+      display: grid;
+      grid-template-columns: repeat(2, 150px);
+      grid-template-rows: repeat(2, 150px);
+      gap: 15px;
+      justify-content: center;
+      margin-top: 40px;
+    }
+
+    .tile {
+      border-radius: 15px;
+      opacity: 0.85;
+      transition: 0.2s;
+      touch-action: manipulation;
+    }
+
+    .tile:active, .tile.active {
+      opacity: 1;
+      filter: brightness(150%);
+    }
+
+    #controls {
+      margin-top: 30px;
+    }
+
+    button {
+      padding: 12px 24px;
+      margin: 10px;
+      border: none;
+      border-radius: 8px;
+      background-color: #1e88e5;
+      color: white;
+      font-size: 16px;
+    }
+
+    #score {
+      font-size: 18px;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 400px) {
+      #game {
+        grid-template-columns: repeat(2, 100px);
+        grid-template-rows: repeat(2, 100px);
+      }
+
+      .tile {
+        width: 100px;
+        height: 100px;
+      }
+    }
+
+    .red    { background-color: #e53935; }
+    .green  { background-color: #43a047; }
+    .blue   { background-color: #1e88e5; }
+    .yellow { background-color: #fbc02d; }
+  </style>
+</head>
+<body>
+  <h1>Demi’s Simon Says</h1>
+  <div id="game">
+    <div id="red" class="tile red"></div>
+    <div id="green" class="tile green"></div>
+    <div id="blue" class="tile blue"></div>
+    <div id="yellow" class="tile yellow"></div>
+  </div>
+
+  <div id="controls">
+    <button onclick="startGame()">Start</button>
+    <button onclick="resetGame()">Reset</button>
+    <div id="score">Score: 0 | High Score: 0</div>
+  </div>
+
+  <script>
+    const tiles = {
+      red: document.getElementById("red"),
+      green: document.getElementById("green"),
+      blue: document.getElementById("blue"),
+      yellow: document.getElementById("yellow")
+    };
+
+    const sounds = {
+      red: new Audio("https://s3.amazonaws.com/freecodecamp/simonSound1.mp3"),
+      green: new Audio("https://s3.amazonaws.com/freecodecamp/simonSound2.mp3"),
+      blue: new Audio("https://s3.amazonaws.com/freecodecamp/simonSound3.mp3"),
+      yellow: new Audio("https://s3.amazonaws.com/freecodecamp/simonSound4.mp3")
+    };
+
+    let sequence = [];
+    let playerSequence = [];
+    let score = 0;
+    let highScore = localStorage.getItem("simonHighScore") || 0;
+    let acceptingInput = false;
+
+    document.getElementById("score").innerText = `Score: 0 | High Score: ${highScore}`;
+
+    function flash(tileId) {
+      tiles[tileId].classList.add("active");
+      sounds[tileId].play();
+      setTimeout(() => tiles[tileId].classList.remove("active"), 400);
+    }
+
+    function playSequence() {
+      acceptingInput = false;
+      let delay = 500;
+      sequence.forEach((color, index) => {
+        setTimeout(() => flash(color), delay * (index + 1));
+      });
+      setTimeout(() => acceptingInput = true, delay * sequence.length + 500);
+    }
+
+    function nextRound() {
+      const colors = Object.keys(tiles);
+      const nextColor = colors[Math.floor(Math.random() * colors.length)];
+      sequence.push(nextColor);
+      playerSequence = [];
+      playSequence();
+    }
+
+    function startGame() {
+      sequence = [];
+      playerSequence = [];
+      score = 0;
+      updateScore();
+      nextRound();
+    }
+
+    function resetGame() {
+      sequence = [];
+      playerSequence = [];
+      score = 0;
+      acceptingInput = false;
+      updateScore();
+    }
+
+    function updateScore() {
+      document.getElementById("score").innerText = `Score: ${score} | High Score: ${highScore}`;
+    }
+
+    function checkInput(color) {
+      if (!acceptingInput) return;
+
+      flash(color);
+      playerSequence.push(color);
+
+      for (let i = 0; i < playerSequence.length; i++) {
+        if (playerSequence[i] !== sequence[i]) {
+          alert("Wrong! Try again.");
+          playerSequence = [];
+          playSequence();
+          return;
+        }
+      }
+
+      if (playerSequence.length === sequence.length) {
+        score++;
+        if (score > highScore) {
+          highScore = score;
+          localStorage.setItem("simonHighScore", highScore);
+        }
+        updateScore();
+        setTimeout(nextRound, 800);
+      }
+    }
+
+    Object.keys(tiles).forEach(color => {
+      tiles[color].addEventListener("click", () => checkInput(color));
+    });
+  </script>
+</body>
+</html>

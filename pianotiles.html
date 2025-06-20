@@ -1,0 +1,59 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Piano Tiles - Demis Arcade</title>
+  <style>
+    body {
+      margin: 0;
+      background: black;
+      overflow: hidden;
+    }
+    .tile {
+      width: 25%;
+      height: 100px;
+      position: absolute;
+      background: white;
+    }
+    #score {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      color: lime;
+      font-family: sans-serif;
+      font-size: 24px;
+    }
+  </style>
+</head>
+<body>
+  <div id="score">Score: 0</div>
+  <script>
+    let score = 0;
+    function spawnTile() {
+      const tile = document.createElement('div');
+      tile.className = 'tile';
+      tile.style.left = (Math.floor(Math.random() * 4) * 25) + '%';
+      tile.style.top = '-100px';
+      document.body.appendChild(tile);
+      let topPos = -100;
+      let speed = 3;
+      const move = setInterval(() => {
+        topPos += speed;
+        tile.style.top = topPos + 'px';
+        if (topPos >= window.innerHeight) {
+          alert("Game Over! Final Score: " + score);
+          location.reload();
+        }
+      }, 10);
+      tile.addEventListener('touchstart', () => {
+        clearInterval(move);
+        document.body.removeChild(tile);
+        score++;
+        document.getElementById('score').textContent = 'Score: ' + score;
+      });
+    }
+    setInterval(spawnTile, 800);
+  </script>
+</body>
+</html>

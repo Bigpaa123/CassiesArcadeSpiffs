@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Piano Tiles</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #111;
+      font-family: sans-serif;
+    }
+    canvas {
+      display: block;
+      margin: 0 auto;
+      background: #000;
+    }
+    #score {
+      color: white;
+      text-align: center;
+      font-size: 1.2em;
+      padding: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div id="score">🎼 Score: 0</div>
+  <canvas id="game" width="300" height="500"></canvas>
+
+  <script>
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    const scoreDisplay = document.getElementById('score');
+    const colCount = 4;
+    const tileWidth = canvas.width / colCount;
+    const tileHeight = 100;
+    let tiles = [];
+    let score = 0;
+    let speed = 1.5;
+    let gameOver = false;
+
+    // Piano sounds
+    const sounds = [
+      new Audio('https://freesound.org/data/previews/331/331912_3248244-lq.mp3'),
+      new Audio('https://freesound.org/data/previews/331/331913_3248244-lq.mp3'),
+      new Audio('https://freesound.org/data/previews/331/331914_3248244-lq.mp3'),
+      new Audio('https://freesound.org/data/previews/331/331915_3248244-lq.mp3')
+    ];
+
+    function randomTile() {
+      return {
+        col: Math.floor(Math.random() * colCount),
+        y: -tileHeight
+      };
+    }
+
+    function drawTile(tile) {
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(tile.col * tileWidth, tile.y, tileWidth, tileHeight);
+    }
+
+    function resetGame() {
+      tiles = [randomTile()];
+      score = 0;
+      speed = 1.5;
+      gameOver = false;
+    }
+
+    function update() {
+      if (gameOver) return;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      for (let tile of tiles) {
+        tile.y += speed;
+        drawTile(tile);
+      }
+
+      // Remove passed tiles
+      if (tiles.length > 0 && tiles[0].y > canvas.height) {
+        alert("Game Over! Score: " + score);
+        gameOver = true;
+        resetGame();
+        return;
+      }
+
+      // Add new tile if last one has dropped halfway
+      if (tiles[tiles.length - 1].y > tileHeight / 2) {
+        tiles.push(randomTile());
+        if (speed < 6) speed += 0.05;
+      }
+
+      scoreDisplay.textContent = `🎼 Score: ${score}`;
+      requestAnimationFrame(update);
+    }
+
+    canvas.addEventListener('click', e => {
+      if (gameOver) return;
+
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      for (let i = 0; i < tiles.length; i++) {
+        const tile = tiles[i];
+        const tx = tile.col * tileWidth;
+        const ty = tile.y;
+
+        if (
+          x > tx &&
+          x < tx + tileWidth &&
+          y > ty &&
+          y < ty + tileHeight
+        ) {
+          tiles.splice(i, 1);
+          score++;
+          if (score > 0) {
+            // Play one of 4 tones
+            const tone = score % 4;
+            try {
+              sounds[tone].currentTime = 0;
+              sounds[tone].play();
+            } catch (e) {
+              console.warn('Sound failed:', e);
+            }
+          }
+          return;
+        }
+      }
+
+      // Wrong tap
+      alert("Wrong tile! Score: " + score);
+      gameOver = true;
+      resetGame();
+    });
+
+    resetGame();
+    update();
+  </script>
+</body>
+</html>

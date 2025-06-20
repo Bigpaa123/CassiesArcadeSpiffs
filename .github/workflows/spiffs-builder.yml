@@ -12,7 +12,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Create data folder and move files
       run: |
@@ -33,7 +33,7 @@ jobs:
         mkspiffs -c data -b 4096 -p 256 -s 0x100000 spiffs.bin
 
     - name: Upload SPIFFS binary
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: spiffs
         path: spiffs.bin

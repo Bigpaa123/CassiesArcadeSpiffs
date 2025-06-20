@@ -1,6 +1,9 @@
 name: build-spiffs
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
@@ -8,23 +11,29 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Download mkspiffs binary (Working fork)
-        run: |
-          mkdir tools
-          wget https://github.com/earlephilhower/mkspiffs/releases/download/3.1.0/mkspiffs-linux64 -O tools/mkspiffs
-          chmod +x tools/mkspiffs
+    - name: Create data folder and move files
+      run: |
+        mkdir -p data
+        mv *.html *.css *.js data/ 2>/dev/null || true
 
-      - name: Build SPIFFS image
-        run: |
-          mkdir -p data
-          cp *.html *.css data/
-          tools/mkspiffs -c data -b 4096 -p 256 -s 0x100000 spiffs.bin
+    - name: Download mkspiffs binary
+      run: |
+        mkdir tools
+        cd tools
+        wget https://github.com/igrr/mkspiffs/releases/download/0.2.3/mkspiffs-0.2.3-linux64.tar.gz
+        tar -xzf mkspiffs-0.2.3-linux64.tar.gz
+        chmod +x mkspiffs
+        sudo mv mkspiffs /usr/local/bin/
 
-      - name: Upload SPIFFS binary
-        uses: actions/upload-artifact@v4
-        with:
-          name: CassiesArcadeSpiffs
-          path: spiffs.bin
+    - name: Build SPIFFS image
+      run: |
+        mkspiffs -c data -b 4096 -p 256 -s 0x100000 spiffs.bin
+
+    - name: Upload SPIFFS binary
+      uses: actions/upload-artifact@v3
+      with:
+        name: spiffs
+        path: spiffs.bin

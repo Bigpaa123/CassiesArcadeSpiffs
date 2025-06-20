@@ -22,15 +22,12 @@ jobs:
     - name: Install build dependencies
       run: |
         sudo apt update
-        sudo apt install -y cmake g++ git
+        sudo apt install -y g++ git make
 
     - name: Clone and build mkspiffs
       run: |
         git clone https://github.com/igrr/mkspiffs.git
         cd mkspiffs
-        mkdir build
-        cd build
-        cmake ..
         make
         sudo cp mkspiffs /usr/local/bin/
 

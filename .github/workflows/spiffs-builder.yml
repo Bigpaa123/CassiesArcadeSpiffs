@@ -14,10 +14,10 @@ jobs:
       - name: Download mkspiffs binary
         run: |
           mkdir tools
-          wget https://github.com/espressif/mkspiffs/releases/download/v0.2.3/mkspiffs-0.2.3-linux-amd64.tar.gz -O tools/mkspiffs.tar.gz
+          wget https://github.com/espressif/arduino-esp32/releases/download/2.0.11/mkspiffs-2.0.11-linux-amd64.tar.gz -O tools/mkspiffs.tar.gz
           tar -xzf tools/mkspiffs.tar.gz -C tools
-          chmod +x tools/mkspiffs-0.2.3-linux-amd64
-          mv tools/mkspiffs-0.2.3-linux-amd64 tools/mkspiffs
+          chmod +x tools/mkspiffs-2.0.11-linux-amd64
+          mv tools/mkspiffs-2.0.11-linux-amd64 tools/mkspiffs
 
       - name: Prepare SPIFFS image
         run: |

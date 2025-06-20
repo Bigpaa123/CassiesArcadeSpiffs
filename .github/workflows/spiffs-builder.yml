@@ -1,43 +1,38 @@
-name: Build SPIFFS Binary
+name: build-spiffs
 
 on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
-    inputs:
-      reason:
-        description: 'Why are you running this build?'
-        required: false
-        default: 'Manual run'
+  workflow_dispatch:  # allows manual run from GitHub UI
 
 jobs:
   build-spiffs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Set up Java (for SPIFFS tool)
-      uses: actions/setup-java@v3
-      with:
-        java-version: '11'
+      - name: Set up Java (for SPIFFS tool)
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '11'
 
-    - name: Download ESP32FS Tool
-      run: |
-        mkdir esp32fs
-        wget https://github.com/me-no-dev/arduino-esp32fs-plugin/raw/master/tool/esp32fs.jar -O esp32fs/esp32fs.jar
+      - name: Download ESP32FS Tool
+        run: |
+          mkdir esp32fs
+          wget https://github.com/igrr/mkspiffs/archive/refs/heads/master.zip -O esp32fs/mkspiffs.zip
+          unzip esp32fs/mkspiffs.zip -d esp32fs
+          cd esp32fs/mkspiffs-master
+          make clean && make
 
-    - name: Prepare SPIFFS image
-      run: |
-        mkdir spiffs-image
-        cp *.html *.css spiffs-image/
-        mkdir build
-        java -jar esp32fs/esp32fs.jar --chip esp32 -c spiffs-image -s 0x100000 -b build/spiffs.bin
+      - name: Prepare SPIFFS image
+        run: |
+          mkdir -p data
+          cp *.html *.css data/
+          ./esp32fs/mkspiffs-master/mkspiffs -c data -b 4096 -p 256 -s 0x100000 spiffs.bin
 
-    - name: Upload SPIFFS binary
-      uses: actions/upload-artifact@v4
-      with:
-        name: spiffs-binary
-        path: build/spiffs.bin
+      - name: Upload SPIFFS binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: CassiesArcadeSpiffs
+          path: spiffs.bin

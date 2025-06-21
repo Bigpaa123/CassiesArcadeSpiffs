@@ -14,10 +14,12 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Create data folder and move files
+    - name: Create data folder and move all site files
       run: |
         mkdir -p data
-        mv *.html *.css *.js data/ 2>/dev/null || true
+        find . -maxdepth 1 -name "*.html" -exec cp {} data/ \;
+        find . -maxdepth 1 -name "*.css" -exec cp {} data/ \;
+        find . -maxdepth 1 -name "*.js" -exec cp {} data/ \;
 
     - name: Install build dependencies
       run: |
